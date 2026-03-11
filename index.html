@@ -47,25 +47,44 @@
         }
 
         .tool-btn {
-            padding: 10px 20px;
-            font-size: 14px;
+            padding: 15px 25px;
+            font-size: 16px;
             cursor: pointer;
             background: #16213e;
             color: #fff;
             border: 2px solid #0f3460;
-            border-radius: 5px;
+            border-radius: 10px;
             transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 90px;
         }
 
         .tool-btn:hover {
             background: #0f3460;
             border-color: #00ff88;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
         }
 
         .tool-btn.active {
             background: #00ff88;
             color: #1a1a2e;
             border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+
+        .tool-btn .icon {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .tool-btn .label {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
         }
 
         #stats {
@@ -117,13 +136,34 @@
     </div>
 
     <div id="controls">
-        <button class="tool-btn" data-tool="none">Select (S)</button>
-        <button class="tool-btn" data-tool="blocker">Blocker (B)</button>
-        <button class="tool-btn" data-tool="digger">Digger (D)</button>
-        <button class="tool-btn" data-tool="builder">Builder (U)</button>
-        <button class="tool-btn" data-tool="basher">Basher (A)</button>
-        <button class="tool-btn" data-tool="umbrella">Umbrella (M)</button>
-        <button class="tool-btn" id="restart-btn">Restart (R)</button>
+        <button class="tool-btn" data-tool="none">
+            <span class="icon">👆</span>
+            <span class="label">Select (S)</span>
+        </button>
+        <button class="tool-btn" data-tool="blocker">
+            <span class="icon">🛑</span>
+            <span class="label">Blocker (B)</span>
+        </button>
+        <button class="tool-btn" data-tool="digger">
+            <span class="icon">⛏️</span>
+            <span class="label">Digger (D)</span>
+        </button>
+        <button class="tool-btn" data-tool="builder">
+            <span class="icon">🔨</span>
+            <span class="label">Builder (U)</span>
+        </button>
+        <button class="tool-btn" data-tool="basher">
+            <span class="icon">💥</span>
+            <span class="label">Basher (A)</span>
+        </button>
+        <button class="tool-btn" data-tool="umbrella">
+            <span class="icon">☂️</span>
+            <span class="label">Umbrella (M)</span>
+        </button>
+        <button class="tool-btn" id="restart-btn">
+            <span class="icon">🔄</span>
+            <span class="label">Restart (R)</span>
+        </button>
     </div>
 
     <div id="stats">
