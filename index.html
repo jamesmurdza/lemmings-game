@@ -68,6 +68,16 @@
             border-color: #00ff88;
         }
 
+        #sound-btn {
+            background: #2a1a4e;
+            border-color: #8844ff;
+        }
+
+        #sound-btn:hover {
+            background: #3a2a5e;
+            border-color: #aa66ff;
+        }
+
         #stats {
             margin-top: 15px;
             font-size: 16px;
@@ -124,6 +134,7 @@
         <button class="tool-btn" data-tool="basher">Basher (A)</button>
         <button class="tool-btn" data-tool="umbrella">Umbrella (M)</button>
         <button class="tool-btn" id="restart-btn">Restart (R)</button>
+        <button class="tool-btn" id="sound-btn">Sound: ON</button>
     </div>
 
     <div id="stats">
@@ -140,6 +151,7 @@
         <p>Guide the lemmings from the entrance (top-left) to the exit (bottom-right)!</p>
         <p>Select a tool and click on a lemming to assign it. Each tool changes lemming behavior.</p>
         <p><strong>Tools:</strong> Blocker (stops others) | Digger (digs down) | Builder (builds stairs) | Basher (digs sideways) | Umbrella (survives falls)</p>
+        <p><strong>Sound:</strong> Press Q to toggle sound effects on/off</p>
     </div>
 
     <script src="game.js"></script>

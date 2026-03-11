@@ -3,6 +3,226 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
+// ==================== SOUND MANAGER ====================
+class SoundManager {
+    constructor() {
+        this.audioContext = null;
+        this.enabled = true;
+        this.masterVolume = 0.3;
+        this.initialized = false;
+    }
+
+    init() {
+        if (this.initialized) return;
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.initialized = true;
+        } catch (e) {
+            console.warn('Web Audio API not supported');
+            this.enabled = false;
+        }
+    }
+
+    toggle() {
+        this.enabled = !this.enabled;
+        return this.enabled;
+    }
+
+    setVolume(vol) {
+        this.masterVolume = Math.max(0, Math.min(1, vol));
+    }
+
+    // Create oscillator-based sound
+    playTone(frequency, duration, type = 'sine', volume = 1, ramp = true) {
+        if (!this.enabled || !this.audioContext) return;
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+
+        const vol = volume * this.masterVolume;
+        gainNode.gain.setValueAtTime(vol, this.audioContext.currentTime);
+
+        if (ramp) {
+            gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+        }
+
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
+    // Play frequency sweep
+    playSweep(startFreq, endFreq, duration, type = 'sine', volume = 1) {
+        if (!this.enabled || !this.audioContext) return;
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(startFreq, this.audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(endFreq, this.audioContext.currentTime + duration);
+
+        const vol = volume * this.masterVolume;
+        gainNode.gain.setValueAtTime(vol, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
+    // Play noise burst (for impact sounds)
+    playNoise(duration, volume = 1) {
+        if (!this.enabled || !this.audioContext) return;
+
+        const bufferSize = this.audioContext.sampleRate * duration;
+        const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = this.audioContext.createBufferSource();
+        const gainNode = this.audioContext.createGain();
+        const filter = this.audioContext.createBiquadFilter();
+
+        noise.buffer = buffer;
+        filter.type = 'lowpass';
+        filter.frequency.value = 1000;
+
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+
+        const vol = volume * this.masterVolume;
+        gainNode.gain.setValueAtTime(vol, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+
+        noise.start();
+        noise.stop(this.audioContext.currentTime + duration);
+    }
+
+    // === GAME SOUND EFFECTS ===
+
+    // Lemming spawns from entrance
+    spawn() {
+        this.playTone(880, 0.1, 'sine', 0.4);
+        setTimeout(() => this.playTone(1100, 0.1, 'sine', 0.3), 50);
+    }
+
+    // Lemming lands after falling
+    land() {
+        this.playNoise(0.08, 0.3);
+        this.playTone(150, 0.1, 'sine', 0.2);
+    }
+
+    // Lemming falls to death
+    death() {
+        this.playSweep(400, 100, 0.3, 'sawtooth', 0.4);
+        setTimeout(() => this.playNoise(0.15, 0.3), 100);
+    }
+
+    // Lemming reaches exit - saved!
+    saved() {
+        this.playTone(523, 0.1, 'sine', 0.4); // C5
+        setTimeout(() => this.playTone(659, 0.1, 'sine', 0.4), 100); // E5
+        setTimeout(() => this.playTone(784, 0.15, 'sine', 0.4), 200); // G5
+    }
+
+    // Tool button clicked
+    buttonClick() {
+        this.playTone(600, 0.05, 'square', 0.2);
+    }
+
+    // Tool applied to lemming
+    toolApply() {
+        this.playTone(440, 0.08, 'sine', 0.3);
+        setTimeout(() => this.playTone(660, 0.1, 'sine', 0.3), 60);
+    }
+
+    // Digger digging
+    dig() {
+        this.playNoise(0.06, 0.2);
+        this.playTone(100 + Math.random() * 50, 0.08, 'triangle', 0.2);
+    }
+
+    // Builder building
+    build() {
+        this.playTone(300, 0.05, 'square', 0.2);
+        this.playTone(450, 0.08, 'square', 0.15);
+    }
+
+    // Basher bashing
+    bash() {
+        this.playNoise(0.1, 0.3);
+        this.playTone(80, 0.12, 'sawtooth', 0.25);
+    }
+
+    // Umbrella deployed
+    umbrella() {
+        this.playSweep(300, 800, 0.2, 'sine', 0.3);
+    }
+
+    // Blocker assigned
+    blocker() {
+        this.playTone(200, 0.1, 'square', 0.3);
+        this.playTone(250, 0.15, 'square', 0.25);
+    }
+
+    // Lemming turns around (hitting blocker or wall)
+    turn() {
+        this.playTone(300, 0.04, 'triangle', 0.15);
+    }
+
+    // Falling sound (called periodically while falling)
+    falling() {
+        this.playSweep(400, 200, 0.15, 'sine', 0.15);
+    }
+
+    // Victory fanfare
+    victory() {
+        const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+        notes.forEach((freq, i) => {
+            setTimeout(() => {
+                this.playTone(freq, 0.25, 'sine', 0.4);
+                this.playTone(freq * 0.5, 0.25, 'sine', 0.2); // harmony
+            }, i * 150);
+        });
+        setTimeout(() => {
+            this.playTone(1047, 0.5, 'sine', 0.5);
+            this.playTone(523, 0.5, 'sine', 0.3);
+        }, 600);
+    }
+
+    // Game over sound
+    gameOver() {
+        const notes = [400, 350, 300, 200];
+        notes.forEach((freq, i) => {
+            setTimeout(() => {
+                this.playTone(freq, 0.3, 'sawtooth', 0.3);
+            }, i * 200);
+        });
+    }
+
+    // Game start/restart
+    gameStart() {
+        this.playTone(440, 0.1, 'sine', 0.3);
+        setTimeout(() => this.playTone(550, 0.1, 'sine', 0.3), 100);
+        setTimeout(() => this.playTone(660, 0.15, 'sine', 0.4), 200);
+    }
+}
+
+// Create global sound manager
+const soundManager = new SoundManager();
+
 // Game constants
 const GRAVITY = 0.5;
 const LEMMING_SPEED = 1;
@@ -215,6 +435,7 @@ class Lemming {
         if (Math.abs(dx) < 15 && Math.abs(dy) < 25) {
             this.state = 'saved';
             gameState.saved++;
+            soundManager.saved();
             return;
         }
 
@@ -232,6 +453,7 @@ class Lemming {
                     if (this.isSolidAt(tileX, belowY)) {
                         this.removeTerrain(tileX, belowY);
                         this.y += TILE_SIZE;
+                        soundManager.dig();
                     } else {
                         // Nothing to dig, become walker
                         this.state = 'walking';
@@ -251,6 +473,7 @@ class Lemming {
                         this.x += this.direction * TILE_SIZE;
                         this.y -= TILE_SIZE / 2;
                         this.builderSteps++;
+                        soundManager.build();
                     } else {
                         // Can't build more, become walker
                         this.state = 'walking';
@@ -270,6 +493,7 @@ class Lemming {
                         if (this.isSolidAt(bashX, tileY - 1)) {
                             this.removeTerrain(bashX, tileY - 1);
                         }
+                        soundManager.bash();
                     } else {
                         // Nothing to bash, become walker
                         this.state = 'walking';
@@ -287,6 +511,11 @@ class Lemming {
                 this.y += this.vy;
                 this.fallDistance += this.vy;
 
+                // Play falling sound occasionally
+                if (this.fallDistance > 20 && Math.floor(this.fallDistance) % 40 === 0) {
+                    soundManager.falling();
+                }
+
                 // Check for landing
                 if (this.isSolidAt(tileX, Math.floor(this.y / TILE_SIZE) + 1)) {
                     // Landed
@@ -296,9 +525,13 @@ class Lemming {
                     if (this.fallDistance > FALL_DEATH_HEIGHT && !this.hasUmbrella) {
                         this.state = 'dead';
                         gameState.lost++;
+                        soundManager.death();
                     } else {
                         this.state = 'walking';
                         this.vy = 0;
+                        if (this.fallDistance > 10) {
+                            soundManager.land();
+                        }
                         this.fallDistance = 0;
                     }
                 }
@@ -307,6 +540,7 @@ class Lemming {
                 if (this.y > canvas.height + 50) {
                     this.state = 'dead';
                     gameState.lost++;
+                    soundManager.death();
                 }
                 break;
 
@@ -343,6 +577,7 @@ class Lemming {
                         const dist = Math.abs(this.x - other.x);
                         if (dist < LEMMING_SIZE && Math.abs(this.y - other.y) < LEMMING_SIZE) {
                             this.direction *= -1;
+                            soundManager.turn();
                         }
                     }
                 }
@@ -432,6 +667,7 @@ function spawnLemming() {
         );
         gameState.lemmings.push(lemming);
         gameState.released++;
+        soundManager.spawn();
     }
 }
 
@@ -455,12 +691,14 @@ function update() {
             l => l.state !== 'dead' && l.state !== 'saved'
         ).length;
 
-        if (activeLemmings === 0) {
+        if (activeLemmings === 0 && !gameState.gameOver) {
             gameState.gameOver = true;
             if (gameState.saved >= Math.ceil(MAX_LEMMINGS * 0.6)) {
                 gameState.message = `Victory! You saved ${gameState.saved} lemmings!`;
+                soundManager.victory();
             } else {
                 gameState.message = `Game Over! Only ${gameState.saved} lemmings saved. Need at least ${Math.ceil(MAX_LEMMINGS * 0.6)}.`;
+                soundManager.gameOver();
             }
         }
     }
@@ -523,6 +761,7 @@ canvas.addEventListener('click', (e) => {
                         if (lemming.state === 'walking') {
                             lemming.state = 'blocker';
                             gameState.toolUses--;
+                            soundManager.blocker();
                         }
                         break;
                     case 'digger':
@@ -530,6 +769,7 @@ canvas.addEventListener('click', (e) => {
                             lemming.state = 'digger';
                             lemming.actionTimer = 0;
                             gameState.toolUses--;
+                            soundManager.toolApply();
                         }
                         break;
                     case 'builder':
@@ -538,6 +778,7 @@ canvas.addEventListener('click', (e) => {
                             lemming.actionTimer = 0;
                             lemming.builderSteps = 0;
                             gameState.toolUses--;
+                            soundManager.toolApply();
                         }
                         break;
                     case 'basher':
@@ -545,12 +786,14 @@ canvas.addEventListener('click', (e) => {
                             lemming.state = 'basher';
                             lemming.actionTimer = 0;
                             gameState.toolUses--;
+                            soundManager.toolApply();
                         }
                         break;
                     case 'umbrella':
                         if (!lemming.hasUmbrella) {
                             lemming.hasUmbrella = true;
                             gameState.toolUses--;
+                            soundManager.umbrella();
                         }
                         break;
                 }
@@ -563,6 +806,8 @@ canvas.addEventListener('click', (e) => {
 // Handle tool selection
 document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
     btn.addEventListener('click', () => {
+        soundManager.init(); // Initialize audio on first user interaction
+        soundManager.buttonClick();
         document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         gameState.selectedTool = btn.dataset.tool;
@@ -571,32 +816,57 @@ document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
 
 // Restart button
 document.getElementById('restart-btn').addEventListener('click', () => {
+    soundManager.init(); // Initialize audio on first user interaction
+    soundManager.buttonClick();
     resetGame();
+});
+
+// Sound toggle button
+document.getElementById('sound-btn').addEventListener('click', () => {
+    soundManager.init(); // Initialize audio on first user interaction
+    const isEnabled = soundManager.toggle();
+    document.getElementById('sound-btn').textContent = `Sound: ${isEnabled ? 'ON' : 'OFF'}`;
+    if (isEnabled) {
+        soundManager.buttonClick();
+    }
 });
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
+    soundManager.init(); // Initialize audio on first user interaction
     switch (e.key.toLowerCase()) {
         case 's':
             selectTool('none');
+            soundManager.buttonClick();
             break;
         case 'b':
             selectTool('blocker');
+            soundManager.buttonClick();
             break;
         case 'd':
             selectTool('digger');
+            soundManager.buttonClick();
             break;
         case 'u':
             selectTool('builder');
+            soundManager.buttonClick();
             break;
         case 'a':
             selectTool('basher');
+            soundManager.buttonClick();
             break;
         case 'm':
             selectTool('umbrella');
+            soundManager.buttonClick();
             break;
         case 'r':
+            soundManager.buttonClick();
             resetGame();
+            break;
+        case 'q':
+            // Toggle sound with Q key
+            const isEnabled = soundManager.toggle();
+            document.getElementById('sound-btn').textContent = `Sound: ${isEnabled ? 'ON' : 'OFF'}`;
             break;
     }
 });
@@ -628,6 +898,7 @@ function resetGame() {
     };
     initTerrain();
     document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    soundManager.gameStart();
 }
 
 // Initialize and start
