@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Lemmings - JS Edition</title>
     <style>
         * {
@@ -11,74 +11,112 @@
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             background: #1a1a2e;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #fff;
         }
 
-        h1 {
-            margin-bottom: 10px;
-            color: #00ff88;
-            text-shadow: 0 0 10px #00ff8855;
-        }
-
         #game-container {
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         canvas {
-            border: 3px solid #00ff88;
-            border-radius: 8px;
-            box-shadow: 0 0 20px #00ff8833;
+            display: block;
+            width: 100%;
+            height: 100%;
         }
 
+        /* Overlay UI */
+        .overlay {
+            position: fixed;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .overlay > * {
+            pointer-events: auto;
+        }
+
+        /* Title */
+        #title {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            color: #00ff88;
+            text-shadow: 0 0 10px #00ff8855, 2px 2px 4px rgba(0,0,0,0.8);
+            font-size: 28px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        /* Controls - bottom center */
         #controls {
-            margin-top: 15px;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
             justify-content: center;
+            max-width: 90%;
         }
 
         .tool-btn {
-            padding: 10px 20px;
+            padding: 12px 18px;
             font-size: 14px;
             cursor: pointer;
-            background: #16213e;
+            background: rgba(22, 33, 62, 0.9);
             color: #fff;
             border: 2px solid #0f3460;
-            border-radius: 5px;
+            border-radius: 8px;
             transition: all 0.2s;
+            backdrop-filter: blur(5px);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
 
         .tool-btn:hover {
-            background: #0f3460;
+            background: rgba(15, 52, 96, 0.95);
             border-color: #00ff88;
+            transform: translateY(-2px);
         }
 
         .tool-btn.active {
-            background: #00ff88;
+            background: rgba(0, 255, 136, 0.9);
             color: #1a1a2e;
             border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
         }
 
+        /* Stats - top left */
         #stats {
-            margin-top: 15px;
-            font-size: 16px;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 100;
             display: flex;
-            gap: 30px;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
         .stat {
-            padding: 8px 15px;
-            background: #16213e;
-            border-radius: 5px;
+            padding: 8px 12px;
+            background: rgba(22, 33, 62, 0.85);
+            border-radius: 8px;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(0, 255, 136, 0.3);
         }
 
         .stat-value {
@@ -86,34 +124,92 @@
             font-weight: bold;
         }
 
+        /* Message - center */
         #message {
-            margin-top: 15px;
-            font-size: 18px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            font-size: 24px;
             color: #ffcc00;
-            min-height: 25px;
-        }
-
-        #instructions {
-            margin-top: 20px;
-            padding: 15px;
-            background: #16213e;
-            border-radius: 8px;
-            max-width: 800px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             text-align: center;
-            line-height: 1.6;
+            padding: 20px 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            display: none;
+            pointer-events: none;
         }
 
-        #instructions h3 {
+        #message.visible {
+            display: block;
+        }
+
+        /* Instructions - top right, collapsible */
+        #instructions {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 100;
+            max-width: 300px;
+        }
+
+        #instructions-toggle {
+            padding: 8px 15px;
+            background: rgba(22, 33, 62, 0.85);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
             color: #00ff88;
-            margin-bottom: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+        }
+
+        #instructions-toggle:hover {
+            background: rgba(15, 52, 96, 0.95);
+        }
+
+        #instructions-content {
+            display: none;
+            margin-top: 10px;
+            padding: 15px;
+            background: rgba(22, 33, 62, 0.9);
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            line-height: 1.5;
+            font-size: 13px;
+        }
+
+        #instructions-content.visible {
+            display: block;
+        }
+
+        #instructions-content h3 {
+            color: #00ff88;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        #instructions-content p {
+            margin-bottom: 8px;
         }
     </style>
 </head>
 <body>
-    <h1>Lemmings JS</h1>
-
     <div id="game-container">
-        <canvas id="game" width="800" height="500"></canvas>
+        <canvas id="game"></canvas>
+    </div>
+
+    <div id="title">Lemmings JS</div>
+
+    <div id="stats">
+        <div class="stat">Released: <span class="stat-value" id="released">0</span></div>
+        <div class="stat">Saved: <span class="stat-value" id="saved">0</span></div>
+        <div class="stat">Lost: <span class="stat-value" id="lost">0</span></div>
+        <div class="stat">Tools: <span class="stat-value" id="tool-uses">10</span></div>
     </div>
 
     <div id="controls">
@@ -126,20 +222,21 @@
         <button class="tool-btn" id="restart-btn">Restart (R)</button>
     </div>
 
-    <div id="stats">
-        <div class="stat">Released: <span class="stat-value" id="released">0</span></div>
-        <div class="stat">Saved: <span class="stat-value" id="saved">0</span></div>
-        <div class="stat">Lost: <span class="stat-value" id="lost">0</span></div>
-        <div class="stat">Tool Uses: <span class="stat-value" id="tool-uses">10</span></div>
-    </div>
-
     <div id="message"></div>
 
     <div id="instructions">
-        <h3>How to Play</h3>
-        <p>Guide the lemmings from the entrance (top-left) to the exit (bottom-right)!</p>
-        <p>Select a tool and click on a lemming to assign it. Each tool changes lemming behavior.</p>
-        <p><strong>Tools:</strong> Blocker (stops others) | Digger (digs down) | Builder (builds stairs) | Basher (digs sideways) | Umbrella (survives falls)</p>
+        <button id="instructions-toggle">? Help</button>
+        <div id="instructions-content">
+            <h3>How to Play</h3>
+            <p>Guide the lemmings from the entrance (top-left) to the exit (bottom-right)!</p>
+            <p>Select a tool and click on a lemming to assign it.</p>
+            <p><strong>Tools:</strong></p>
+            <p>Blocker - stops others<br>
+            Digger - digs down<br>
+            Builder - builds stairs<br>
+            Basher - digs sideways<br>
+            Umbrella - survives falls</p>
+        </div>
     </div>
 
     <script src="game.js"></script>

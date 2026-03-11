@@ -3,6 +3,10 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
+// Base game dimensions (virtual coordinates)
+const BASE_WIDTH = 800;
+const BASE_HEIGHT = 500;
+
 // Game constants
 const GRAVITY = 0.5;
 const LEMMING_SPEED = 1;
@@ -11,6 +15,42 @@ const TILE_SIZE = 10;
 const SPAWN_INTERVAL = 60; // frames between spawns
 const MAX_LEMMINGS = 15;
 const FALL_DEATH_HEIGHT = 80;
+
+// Scale factor for rendering
+let scale = 1;
+let offsetX = 0;
+let offsetY = 0;
+
+// Handle canvas resizing
+function resizeCanvas() {
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    // Set canvas to full window size
+    canvas.width = windowWidth;
+    canvas.height = windowHeight;
+
+    // Calculate scale to fit the game while maintaining aspect ratio
+    const scaleX = windowWidth / BASE_WIDTH;
+    const scaleY = windowHeight / BASE_HEIGHT;
+    scale = Math.min(scaleX, scaleY);
+
+    // Center the game area
+    offsetX = (windowWidth - BASE_WIDTH * scale) / 2;
+    offsetY = (windowHeight - BASE_HEIGHT * scale) / 2;
+}
+
+// Convert screen coordinates to game coordinates
+function screenToGame(screenX, screenY) {
+    return {
+        x: (screenX - offsetX) / scale,
+        y: (screenY - offsetY) / scale
+    };
+}
+
+// Initial resize
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
 // Colors
 const COLORS = {
@@ -50,8 +90,8 @@ let terrainData = [];
 
 // Initialize terrain
 function initTerrain() {
-    const cols = Math.ceil(canvas.width / TILE_SIZE);
-    const rows = Math.ceil(canvas.height / TILE_SIZE);
+    const cols = Math.ceil(BASE_WIDTH / TILE_SIZE);
+    const rows = Math.ceil(BASE_HEIGHT / TILE_SIZE);
     terrainData = [];
 
     for (let y = 0; y < rows; y++) {
@@ -304,7 +344,7 @@ class Lemming {
                 }
 
                 // Check for out of bounds
-                if (this.y > canvas.height + 50) {
+                if (this.y > BASE_HEIGHT + 50) {
                     this.state = 'dead';
                     gameState.lost++;
                 }
@@ -348,7 +388,7 @@ class Lemming {
                 }
 
                 // Boundary check
-                if (this.x < 10 || this.x > canvas.width - 10) {
+                if (this.x < 10 || this.x > BASE_WIDTH - 10) {
                     this.direction *= -1;
                 }
                 break;
@@ -470,14 +510,34 @@ function update() {
     document.getElementById('saved').textContent = gameState.saved;
     document.getElementById('lost').textContent = gameState.lost;
     document.getElementById('tool-uses').textContent = gameState.toolUses;
-    document.getElementById('message').textContent = gameState.message;
+
+    // Handle message display with visibility
+    const messageEl = document.getElementById('message');
+    if (gameState.message) {
+        messageEl.textContent = gameState.message;
+        messageEl.classList.add('visible');
+    } else {
+        messageEl.classList.remove('visible');
+    }
 }
 
 // Draw everything
 function draw() {
-    // Clear canvas
+    // Clear entire canvas
     ctx.fillStyle = COLORS.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Save context state
+    ctx.save();
+
+    // Apply transformation for scaling and centering
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+
+    // Draw game border
+    ctx.strokeStyle = '#00ff88';
+    ctx.lineWidth = 3 / scale;
+    ctx.strokeRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
     // Draw terrain
     drawTerrain();
@@ -490,12 +550,8 @@ function draw() {
         lemming.draw();
     }
 
-    // Draw selected tool indicator
-    if (gameState.selectedTool !== 'none') {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.font = '14px Arial';
-        ctx.fillText(`Tool: ${gameState.selectedTool.toUpperCase()}`, 10, 20);
-    }
+    // Restore context state
+    ctx.restore();
 }
 
 // Game loop
@@ -508,8 +564,13 @@ function gameLoop() {
 // Handle clicks on canvas
 canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+
+    // Convert to game coordinates
+    const gameCoords = screenToGame(screenX, screenY);
+    const x = gameCoords.x;
+    const y = gameCoords.y;
 
     if (gameState.selectedTool === 'none' || gameState.toolUses <= 0) return;
 
@@ -630,6 +691,16 @@ function resetGame() {
     document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
 }
 
+// Help toggle functionality
+const helpToggle = document.getElementById('instructions-toggle');
+const helpContent = document.getElementById('instructions-content');
+
+helpToggle.addEventListener('click', () => {
+    helpContent.classList.toggle('visible');
+    helpToggle.textContent = helpContent.classList.contains('visible') ? 'X Close' : '? Help';
+});
+
 // Initialize and start
+resizeCanvas();
 initTerrain();
 gameLoop();
