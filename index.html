@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lemmings - JS Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            color: #00ff88;
+            text-shadow: 0 0 10px #00ff8855;
+        }
+
+        #game-container {
+            position: relative;
+        }
+
+        canvas {
+            border: 3px solid #00ff88;
+            border-radius: 8px;
+            box-shadow: 0 0 20px #00ff8833;
+        }
+
+        #controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tool-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            background: #16213e;
+            color: #fff;
+            border: 2px solid #0f3460;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover {
+            background: #0f3460;
+            border-color: #00ff88;
+        }
+
+        .tool-btn.active {
+            background: #00ff88;
+            color: #1a1a2e;
+            border-color: #00ff88;
+        }
+
+        #stats {
+            margin-top: 15px;
+            font-size: 16px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat {
+            padding: 8px 15px;
+            background: #16213e;
+            border-radius: 5px;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-size: 18px;
+            color: #ffcc00;
+            min-height: 25px;
+        }
+
+        #instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background: #16213e;
+            border-radius: 8px;
+            max-width: 800px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        #instructions h3 {
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lemmings JS</h1>
+
+    <div id="game-container">
+        <canvas id="game" width="800" height="500"></canvas>
+    </div>
+
+    <div id="controls">
+        <button class="tool-btn" data-tool="none">Select (S)</button>
+        <button class="tool-btn" data-tool="blocker">Blocker (B)</button>
+        <button class="tool-btn" data-tool="digger">Digger (D)</button>
+        <button class="tool-btn" data-tool="builder">Builder (U)</button>
+        <button class="tool-btn" data-tool="basher">Basher (A)</button>
+        <button class="tool-btn" data-tool="umbrella">Umbrella (M)</button>
+        <button class="tool-btn" id="restart-btn">Restart (R)</button>
+    </div>
+
+    <div id="stats">
+        <div class="stat">Released: <span class="stat-value" id="released">0</span></div>
+        <div class="stat">Saved: <span class="stat-value" id="saved">0</span></div>
+        <div class="stat">Lost: <span class="stat-value" id="lost">0</span></div>
+        <div class="stat">Tool Uses: <span class="stat-value" id="tool-uses">10</span></div>
+    </div>
+
+    <div id="message"></div>
+
+    <div id="instructions">
+        <h3>How to Play</h3>
+        <p>Guide the lemmings from the entrance (top-left) to the exit (bottom-right)!</p>
+        <p>Select a tool and click on a lemming to assign it. Each tool changes lemming behavior.</p>
+        <p><strong>Tools:</strong> Blocker (stops others) | Digger (digs down) | Builder (builds stairs) | Basher (digs sideways) | Umbrella (survives falls)</p>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

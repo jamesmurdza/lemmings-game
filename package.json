@@ -1,0 +1,11 @@
+{
+  "name": "lemmings-game",
+  "version": "1.0.0",
+  "description": "A simple JavaScript implementation of the classic Lemmings game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["lemmings", "game", "canvas", "javascript"],
+  "license": "MIT"
+}
