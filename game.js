@@ -62,6 +62,15 @@ let gameState = {
     message: ''
 };
 
+// Drag state for mouse dragging lemmings
+let dragState = {
+    isDragging: false,
+    draggedLemming: null,
+    offsetX: 0,
+    offsetY: 0,
+    previousState: null  // Store the lemming's state before dragging
+};
+
 // Terrain data (1 = solid, 0 = empty)
 let terrainData = [];
 
@@ -247,7 +256,7 @@ class Lemming {
     }
 
     update() {
-        if (this.state === 'dead' || this.state === 'saved') return;
+        if (this.state === 'dead' || this.state === 'saved' || this.state === 'dragging') return;
 
         const tileX = this.getTileX();
         const tileY = this.getTileY();
@@ -420,6 +429,9 @@ class Lemming {
             case 'walking':
                 color = COLORS.lemmingWalking;
                 break;
+            case 'dragging':
+                color = '#ff00ff'; // Magenta for dragging
+                break;
         }
 
         // Body
@@ -457,6 +469,22 @@ class Lemming {
             ctx.moveTo(this.x - 5, this.y - 18);
             ctx.lineTo(this.x + 5, this.y - 18);
             ctx.stroke();
+        }
+
+        // Dragging indicator - draw a glowing ring
+        if (this.state === 'dragging') {
+            ctx.strokeStyle = '#ff00ff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y - 5, LEMMING_SIZE / 2 + 4, 0, Math.PI * 2);
+            ctx.stroke();
+            // Draw grab hand indicator lines
+            ctx.strokeStyle = 'rgba(255, 0, 255, 0.5)';
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.arc(this.x, this.y - 5, LEMMING_SIZE / 2 + 8, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
         }
     }
 
@@ -549,17 +577,142 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Handle clicks on canvas
-canvas.addEventListener('click', (e) => {
+// Helper function to get mouse position relative to canvas
+function getMousePos(e) {
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
+}
+
+// Handle mouse down - start dragging
+canvas.addEventListener('mousedown', (e) => {
+    const pos = getMousePos(e);
+
+    // Find a lemming under the mouse cursor
+    for (const lemming of gameState.lemmings) {
+        if (lemming.containsPoint(pos.x, pos.y) &&
+            lemming.state !== 'dead' &&
+            lemming.state !== 'saved') {
+
+            // Start dragging this lemming
+            dragState.isDragging = true;
+            dragState.draggedLemming = lemming;
+            dragState.offsetX = lemming.x - pos.x;
+            dragState.offsetY = lemming.y - pos.y;
+            dragState.previousState = lemming.state;
+
+            // Set lemming to dragging state
+            lemming.state = 'dragging';
+            lemming.vy = 0; // Reset velocity
+
+            // Change cursor to grabbing
+            canvas.style.cursor = 'grabbing';
+
+            // Prevent the click event from firing
+            e.preventDefault();
+            break;
+        }
+    }
+});
+
+// Handle mouse move - update dragged lemming position
+canvas.addEventListener('mousemove', (e) => {
+    const pos = getMousePos(e);
+
+    if (dragState.isDragging && dragState.draggedLemming) {
+        // Update lemming position to follow mouse
+        dragState.draggedLemming.x = pos.x + dragState.offsetX;
+        dragState.draggedLemming.y = pos.y + dragState.offsetY;
+
+        // Keep lemming within canvas bounds
+        dragState.draggedLemming.x = Math.max(10, Math.min(canvas.width - 10, dragState.draggedLemming.x));
+        dragState.draggedLemming.y = Math.max(10, Math.min(canvas.height - 10, dragState.draggedLemming.y));
+    } else {
+        // Update cursor when hovering over a lemming
+        let hoveringLemming = false;
+        for (const lemming of gameState.lemmings) {
+            if (lemming.containsPoint(pos.x, pos.y) &&
+                lemming.state !== 'dead' &&
+                lemming.state !== 'saved') {
+                hoveringLemming = true;
+                break;
+            }
+        }
+        canvas.style.cursor = hoveringLemming ? 'grab' : 'default';
+    }
+});
+
+// Handle mouse up - release dragged lemming
+canvas.addEventListener('mouseup', (e) => {
+    if (dragState.isDragging && dragState.draggedLemming) {
+        const lemming = dragState.draggedLemming;
+
+        // Check if lemming is on solid ground
+        const tileX = lemming.getTileX();
+        const tileY = lemming.getTileY();
+        const belowY = tileY + 1;
+
+        if (lemming.isSolidAt(tileX, belowY)) {
+            // On ground, restore previous state or set to walking
+            if (dragState.previousState === 'blocker' ||
+                dragState.previousState === 'digger' ||
+                dragState.previousState === 'builder' ||
+                dragState.previousState === 'basher') {
+                lemming.state = dragState.previousState;
+            } else {
+                lemming.state = 'walking';
+            }
+            // Snap to ground
+            lemming.y = Math.floor(lemming.y / TILE_SIZE) * TILE_SIZE;
+        } else {
+            // In the air, start falling
+            lemming.state = 'falling';
+            lemming.fallDistance = 0;
+            lemming.vy = 0;
+        }
+
+        // Reset drag state
+        dragState.isDragging = false;
+        dragState.draggedLemming = null;
+        dragState.previousState = null;
+
+        canvas.style.cursor = 'default';
+    }
+});
+
+// Handle mouse leaving canvas - release dragged lemming
+canvas.addEventListener('mouseleave', (e) => {
+    if (dragState.isDragging && dragState.draggedLemming) {
+        const lemming = dragState.draggedLemming;
+
+        // Start falling when released
+        lemming.state = 'falling';
+        lemming.fallDistance = 0;
+        lemming.vy = 0;
+
+        // Reset drag state
+        dragState.isDragging = false;
+        dragState.draggedLemming = null;
+        dragState.previousState = null;
+
+        canvas.style.cursor = 'default';
+    }
+});
+
+// Handle clicks on canvas (for tool application)
+canvas.addEventListener('click', (e) => {
+    // Don't process click if we just finished dragging
+    if (dragState.isDragging) return;
+
+    const pos = getMousePos(e);
 
     if (gameState.selectedTool === 'none' || gameState.toolUses <= 0) return;
 
     // Find clicked lemming
     for (const lemming of gameState.lemmings) {
-        if (lemming.containsPoint(x, y) && lemming.state !== 'dead' && lemming.state !== 'saved') {
+        if (lemming.containsPoint(pos.x, pos.y) && lemming.state !== 'dead' && lemming.state !== 'saved') {
             // Apply tool
             if (lemming.state === 'walking' || lemming.state === 'falling') {
                 switch (gameState.selectedTool) {
@@ -669,6 +822,14 @@ function resetGame() {
         entrance: { x: 80, y: 50 },
         exit: { x: canvas.width - 80, y: canvas.height - 60 },
         message: ''
+    };
+    // Reset drag state
+    dragState = {
+        isDragging: false,
+        draggedLemming: null,
+        offsetX: 0,
+        offsetY: 0,
+        previousState: null
     };
     initTerrain();
     document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
