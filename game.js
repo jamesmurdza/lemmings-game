@@ -21,13 +21,13 @@ function resizeCanvas() {
 }
 
 // Game constants
-const GRAVITY = 0.5;
-const LEMMING_SPEED = 1.5;
-const LEMMING_SIZE = 12;
-const TILE_SIZE = 12;
-const SPAWN_INTERVAL = 50; // frames between spawns
+const GRAVITY = 0.3;
+const LEMMING_SPEED = 0.5;
+const LEMMING_SIZE = 10;
+const TILE_SIZE = 10;
+const SPAWN_INTERVAL = 120; // frames between spawns (slower spawning)
 const MAX_LEMMINGS = 15;
-const FALL_DEATH_HEIGHT = 100;
+const FALL_DEATH_HEIGHT = 120; // more forgiving fall distance
 
 // Colors
 const COLORS = {
@@ -501,10 +501,10 @@ function update() {
 
         if (activeLemmings === 0) {
             gameState.gameOver = true;
-            if (gameState.saved >= Math.ceil(MAX_LEMMINGS * 0.6)) {
+            if (gameState.saved >= Math.ceil(MAX_LEMMINGS * 0.5)) {
                 gameState.message = `Victory! You saved ${gameState.saved} lemmings!`;
             } else {
-                gameState.message = `Game Over! Only ${gameState.saved} lemmings saved. Need at least ${Math.ceil(MAX_LEMMINGS * 0.6)}.`;
+                gameState.message = `Game Over! Only ${gameState.saved} lemmings saved. Need at least ${Math.ceil(MAX_LEMMINGS * 0.5)}.`;
             }
         }
     }
@@ -663,7 +663,7 @@ function resetGame() {
         released: 0,
         saved: 0,
         lost: 0,
-        toolUses: 10,
+        toolUses: 15,
         frameCount: 0,
         gameOver: false,
         entrance: { x: 80, y: 50 },

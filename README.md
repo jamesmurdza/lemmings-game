@@ -22,7 +22,7 @@ Select a tool and click on a lemming to assign it:
 
 ### Objective
 
-Save at least 60% of the lemmings (9 out of 15) to win!
+Save at least 50% of the lemmings (8 out of 15) to win!
 
 ## Running the Game
 
