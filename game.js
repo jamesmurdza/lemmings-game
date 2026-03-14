@@ -514,7 +514,26 @@ function update() {
     document.getElementById('saved').textContent = gameState.saved;
     document.getElementById('lost').textContent = gameState.lost;
     document.getElementById('tool-uses').textContent = gameState.toolUses;
-    document.getElementById('message').textContent = gameState.message;
+
+    // Update progress bars
+    const savedProgress = document.getElementById('saved-progress');
+    const lostProgress = document.getElementById('lost-progress');
+    if (savedProgress) {
+        savedProgress.style.width = `${(gameState.saved / MAX_LEMMINGS) * 100}%`;
+    }
+    if (lostProgress) {
+        lostProgress.style.width = `${(gameState.lost / MAX_LEMMINGS) * 100}%`;
+    }
+
+    // Update message with styling
+    const messageEl = document.getElementById('message');
+    messageEl.textContent = gameState.message;
+    messageEl.classList.remove('victory', 'defeat');
+    if (gameState.message.includes('Victory')) {
+        messageEl.classList.add('victory');
+    } else if (gameState.message.includes('Game Over')) {
+        messageEl.classList.add('defeat');
+    }
 }
 
 // Draw everything
@@ -672,6 +691,19 @@ function resetGame() {
     };
     initTerrain();
     document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+
+    // Reset progress bars
+    const savedProgress = document.getElementById('saved-progress');
+    const lostProgress = document.getElementById('lost-progress');
+    if (savedProgress) savedProgress.style.width = '0%';
+    if (lostProgress) lostProgress.style.width = '0%';
+
+    // Reset message styling
+    const messageEl = document.getElementById('message');
+    if (messageEl) {
+        messageEl.textContent = '';
+        messageEl.classList.remove('victory', 'defeat');
+    }
 }
 
 // Initialize and start

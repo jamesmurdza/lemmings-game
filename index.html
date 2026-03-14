@@ -84,23 +84,231 @@
             border-color: #00ff88;
         }
 
-        #stats {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+        /* Unified Metrics Panel */
+        #metrics-panel {
             pointer-events: auto;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px 20px;
+            min-width: 280px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+                0 0 60px rgba(0, 255, 136, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
         }
 
-        .stat {
-            padding: 6px 12px;
-            background: rgba(22, 33, 62, 0.9);
-            border-radius: 5px;
+        #metrics-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00ff88, #00d4ff, #a855f7);
+            border-radius: 16px 16px 0 0;
+        }
+
+        .metrics-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metrics-header-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 14px;
         }
 
-        .stat-value {
+        .metrics-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            background: linear-gradient(90deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.15);
+        }
+
+        .metric-item.wide {
+            grid-column: span 2;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .metric-label-icon {
+            font-size: 12px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .metric-value.saved {
             color: #00ff88;
-            font-weight: bold;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .metric-value.released {
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .metric-value.lost {
+            color: #ff6b6b;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+
+        .metric-value.tools {
+            color: #fbbf24;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+        }
+
+        .metric-subtext {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-fill.saved {
+            background: linear-gradient(90deg, #00ff88, #00d4aa);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .progress-fill.lost {
+            background: linear-gradient(90deg, #ff6b6b, #ff8585);
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* Combined Progress (for saved vs lost) */
+        .dual-progress {
+            display: flex;
+            gap: 2px;
+            margin-top: 10px;
+        }
+
+        .dual-progress .progress-bar {
+            flex: 1;
+            height: 8px;
+        }
+
+        /* Animated glow effect */
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .metric-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, currentColor 0%, transparent 70%);
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        .metric-item.saved::after { color: #00ff88; }
+        .metric-item.released::after { color: #00d4ff; }
+        .metric-item.lost::after { color: #ff6b6b; }
+        .metric-item.tools::after { color: #fbbf24; }
+
+        /* Goal indicator */
+        .goal-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .goal-icon {
+            font-size: 16px;
+        }
+
+        .goal-text {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .goal-value {
+            color: #fbbf24;
+            font-weight: 700;
         }
 
         #message {
@@ -108,10 +316,37 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 24px;
-            color: #ffcc00;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            text-shadow:
+                0 0 20px rgba(0, 255, 136, 0.8),
+                2px 2px 4px rgba(0, 0, 0, 0.8);
             z-index: 10;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #message:not(:empty) {
+            opacity: 1;
+        }
+
+        #message.victory {
+            border-color: rgba(0, 255, 136, 0.5);
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+        }
+
+        #message.defeat {
+            border-color: rgba(255, 107, 107, 0.5);
+            box-shadow: 0 0 40px rgba(255, 107, 107, 0.3);
+            text-shadow:
+                0 0 20px rgba(255, 107, 107, 0.8),
+                2px 2px 4px rgba(0, 0, 0, 0.8);
         }
 
         #instructions {
@@ -132,11 +367,55 @@
                 <button class="tool-btn" data-tool="umbrella">Umbrella (M)</button>
                 <button class="tool-btn" id="restart-btn">Restart (R)</button>
             </div>
-            <div id="stats">
-                <div class="stat">Released: <span class="stat-value" id="released">0</span></div>
-                <div class="stat">Saved: <span class="stat-value" id="saved">0</span></div>
-                <div class="stat">Lost: <span class="stat-value" id="lost">0</span></div>
-                <div class="stat">Tools: <span class="stat-value" id="tool-uses">10</span></div>
+            <div id="metrics-panel">
+                <div class="metrics-header">
+                    <div class="metrics-header-icon">📊</div>
+                    <div class="metrics-title">Mission Status</div>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-item released">
+                        <div class="metric-label">
+                            <span class="metric-label-icon">🚪</span>
+                            Released
+                        </div>
+                        <div class="metric-value released"><span id="released">0</span><span style="font-size: 14px; color: #64748b;"> / 15</span></div>
+                    </div>
+                    <div class="metric-item tools">
+                        <div class="metric-label">
+                            <span class="metric-label-icon">🔧</span>
+                            Tools Left
+                        </div>
+                        <div class="metric-value tools" id="tool-uses">15</div>
+                    </div>
+                    <div class="metric-item saved">
+                        <div class="metric-label">
+                            <span class="metric-label-icon">✅</span>
+                            Saved
+                        </div>
+                        <div class="metric-value saved" id="saved">0</div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill saved" id="saved-progress" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-item lost">
+                        <div class="metric-label">
+                            <span class="metric-label-icon">💀</span>
+                            Lost
+                        </div>
+                        <div class="metric-value lost" id="lost">0</div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill lost" id="lost-progress" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="goal-indicator">
+                    <span class="goal-icon">🎯</span>
+                    <span class="goal-text">Goal: Save at least <span class="goal-value">8</span> lemmings to win!</span>
+                </div>
             </div>
         </div>
         <div id="message"></div>
