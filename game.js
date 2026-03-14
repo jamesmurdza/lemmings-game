@@ -21,13 +21,13 @@ function resizeCanvas() {
 }
 
 // Game constants
-const GRAVITY = 0.3;
-const LEMMING_SPEED = 0.5;
-const LEMMING_SIZE = 10;
-const TILE_SIZE = 10;
+const GRAVITY = 0.4;
+const LEMMING_SPEED = 0.7;
+const LEMMING_SIZE = 14;
+const TILE_SIZE = 14;
 const SPAWN_INTERVAL = 120; // frames between spawns (slower spawning)
 const MAX_LEMMINGS = 15;
-const FALL_DEATH_HEIGHT = 120; // more forgiving fall distance
+const FALL_DEATH_HEIGHT = 160; // more forgiving fall distance
 
 // Colors
 const COLORS = {
@@ -182,22 +182,22 @@ function drawTerrain() {
 function drawEntranceExit() {
     // Entrance
     ctx.fillStyle = COLORS.entrance;
-    ctx.fillRect(gameState.entrance.x - 15, gameState.entrance.y - 20, 30, 20);
+    ctx.fillRect(gameState.entrance.x - 21, gameState.entrance.y - 28, 42, 28);
     ctx.fillStyle = '#6666ff';
-    ctx.fillRect(gameState.entrance.x - 5, gameState.entrance.y - 5, 10, 10);
+    ctx.fillRect(gameState.entrance.x - 7, gameState.entrance.y - 7, 14, 14);
 
     // Exit
     ctx.fillStyle = COLORS.exit;
     ctx.beginPath();
-    ctx.moveTo(gameState.exit.x, gameState.exit.y - 30);
-    ctx.lineTo(gameState.exit.x - 20, gameState.exit.y);
-    ctx.lineTo(gameState.exit.x + 20, gameState.exit.y);
+    ctx.moveTo(gameState.exit.x, gameState.exit.y - 42);
+    ctx.lineTo(gameState.exit.x - 28, gameState.exit.y);
+    ctx.lineTo(gameState.exit.x + 28, gameState.exit.y);
     ctx.closePath();
     ctx.fill();
 
     // Exit door
     ctx.fillStyle = '#00aa55';
-    ctx.fillRect(gameState.exit.x - 8, gameState.exit.y - 20, 16, 20);
+    ctx.fillRect(gameState.exit.x - 11, gameState.exit.y - 28, 22, 28);
 }
 
 // Lemming class
@@ -256,7 +256,7 @@ class Lemming {
         // Check for exit
         const dx = this.x - gameState.exit.x;
         const dy = this.y - gameState.exit.y;
-        if (Math.abs(dx) < 15 && Math.abs(dy) < 25) {
+        if (Math.abs(dx) < 21 && Math.abs(dy) < 35) {
             this.state = 'saved';
             gameState.saved++;
             return;
@@ -425,45 +425,45 @@ class Lemming {
         // Body
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(this.x, this.y - 5, LEMMING_SIZE / 2, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y - 7, LEMMING_SIZE / 2, 0, Math.PI * 2);
         ctx.fill();
 
         // Head
         ctx.fillStyle = '#ffd700';
         ctx.beginPath();
-        ctx.arc(this.x, this.y - 12, 4, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y - 17, 6, 0, Math.PI * 2);
         ctx.fill();
 
         // Direction indicator
         ctx.fillStyle = '#333';
         ctx.beginPath();
-        ctx.arc(this.x + this.direction * 2, this.y - 12, 1.5, 0, Math.PI * 2);
+        ctx.arc(this.x + this.direction * 3, this.y - 17, 2, 0, Math.PI * 2);
         ctx.fill();
 
         // Umbrella indicator
         if (this.hasUmbrella) {
             ctx.strokeStyle = COLORS.umbrella;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(this.x, this.y - 20, 8, Math.PI, 0);
+            ctx.arc(this.x, this.y - 28, 11, Math.PI, 0);
             ctx.stroke();
         }
 
         // State indicator for special states
         if (this.state === 'blocker') {
             ctx.strokeStyle = '#ff0000';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.moveTo(this.x - 5, this.y - 18);
-            ctx.lineTo(this.x + 5, this.y - 18);
+            ctx.moveTo(this.x - 7, this.y - 25);
+            ctx.lineTo(this.x + 7, this.y - 25);
             ctx.stroke();
         }
     }
 
     containsPoint(px, py) {
         const dx = px - this.x;
-        const dy = py - (this.y - 5);
-        return dx * dx + dy * dy < 100;
+        const dy = py - (this.y - 7);
+        return dx * dx + dy * dy < 200;
     }
 }
 
