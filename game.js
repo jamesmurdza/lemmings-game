@@ -3,14 +3,31 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
+// Set canvas size to fill window
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Update exit position based on new canvas size
+    if (gameState) {
+        gameState.exit.x = canvas.width - 80;
+        gameState.exit.y = canvas.height - 60;
+    }
+
+    // Reinitialize terrain if game is already running
+    if (terrainData.length > 0) {
+        initTerrain();
+    }
+}
+
 // Game constants
 const GRAVITY = 0.5;
-const LEMMING_SPEED = 1;
-const LEMMING_SIZE = 10;
-const TILE_SIZE = 10;
-const SPAWN_INTERVAL = 60; // frames between spawns
+const LEMMING_SPEED = 1.5;
+const LEMMING_SIZE = 12;
+const TILE_SIZE = 12;
+const SPAWN_INTERVAL = 50; // frames between spawns
 const MAX_LEMMINGS = 15;
-const FALL_DEATH_HEIGHT = 80;
+const FALL_DEATH_HEIGHT = 100;
 
 // Colors
 const COLORS = {
@@ -40,8 +57,8 @@ let gameState = {
     toolUses: 10,
     frameCount: 0,
     gameOver: false,
-    entrance: { x: 50, y: 30 },
-    exit: { x: 720, y: 440 },
+    entrance: { x: 80, y: 50 },
+    exit: { x: window.innerWidth - 80, y: window.innerHeight - 60 },
     message: ''
 };
 
@@ -69,46 +86,73 @@ function initTerrain() {
     }
 
     // Create starting platform (under entrance)
-    for (let x = 2; x < 15; x++) {
-        terrainData[8][x] = 1;
-        terrainData[9][x] = 1;
+    const startPlatY = Math.floor(rows * 0.12);
+    for (let x = 2; x < 18; x++) {
+        if (startPlatY < rows) {
+            terrainData[startPlatY][x] = 1;
+            terrainData[startPlatY + 1][x] = 1;
+        }
     }
 
-    // Create middle platforms
+    // Create middle platforms - scaled to canvas size
     // Platform 1 - slopes down from left
-    for (let x = 10; x < 35; x++) {
-        let yPos = 18 + Math.floor((x - 10) / 5);
-        if (yPos < rows - 3) {
+    const plat1StartY = Math.floor(rows * 0.25);
+    const plat1StartX = Math.floor(cols * 0.1);
+    const plat1EndX = Math.floor(cols * 0.4);
+    for (let x = plat1StartX; x < plat1EndX; x++) {
+        let yPos = plat1StartY + Math.floor((x - plat1StartX) / 6);
+        if (yPos < rows - 3 && yPos >= 0) {
             terrainData[yPos][x] = 1;
             terrainData[yPos + 1][x] = 1;
         }
     }
 
     // Platform 2 - middle section
-    for (let x = 30; x < 55; x++) {
-        terrainData[28][x] = 1;
-        terrainData[29][x] = 1;
+    const plat2Y = Math.floor(rows * 0.45);
+    const plat2StartX = Math.floor(cols * 0.3);
+    const plat2EndX = Math.floor(cols * 0.6);
+    for (let x = plat2StartX; x < plat2EndX; x++) {
+        if (plat2Y < rows) {
+            terrainData[plat2Y][x] = 1;
+            terrainData[plat2Y + 1][x] = 1;
+        }
     }
 
     // Platform 3 - right section with gap
-    for (let x = 50; x < 70; x++) {
-        if (x < 58 || x > 62) { // gap in middle
-            terrainData[35][x] = 1;
-            terrainData[36][x] = 1;
+    const plat3Y = Math.floor(rows * 0.6);
+    const plat3StartX = Math.floor(cols * 0.5);
+    const plat3EndX = Math.floor(cols * 0.8);
+    const gapStart = Math.floor(cols * 0.62);
+    const gapEnd = Math.floor(cols * 0.68);
+    for (let x = plat3StartX; x < plat3EndX; x++) {
+        if (x < gapStart || x > gapEnd) {
+            if (plat3Y < rows) {
+                terrainData[plat3Y][x] = 1;
+                terrainData[plat3Y + 1][x] = 1;
+            }
         }
     }
 
     // Platform 4 - lower right leading to exit
-    for (let x = 60; x < cols - 2; x++) {
-        terrainData[42][x] = 1;
-        terrainData[43][x] = 1;
+    const plat4Y = Math.floor(rows * 0.78);
+    const plat4StartX = Math.floor(cols * 0.6);
+    for (let x = plat4StartX; x < cols - 2; x++) {
+        if (plat4Y < rows) {
+            terrainData[plat4Y][x] = 1;
+            terrainData[plat4Y + 1][x] = 1;
+        }
     }
 
     // Add some obstacles/walls
     // Wall blocking direct path
-    for (let y = 25; y < 35; y++) {
-        terrainData[y][45] = 1;
-        terrainData[y][46] = 1;
+    const wallX = Math.floor(cols * 0.5);
+    const wallStartY = Math.floor(rows * 0.4);
+    const wallEndY = Math.floor(rows * 0.6);
+    for (let y = wallStartY; y < wallEndY; y++) {
+        if (y < rows && wallX < cols) {
+            terrainData[y][wallX] = 1;
+            terrainData[y][wallX + 1] = 1;
+        }
     }
 }
 
@@ -622,8 +666,8 @@ function resetGame() {
         toolUses: 10,
         frameCount: 0,
         gameOver: false,
-        entrance: { x: 50, y: 30 },
-        exit: { x: 720, y: 440 },
+        entrance: { x: 80, y: 50 },
+        exit: { x: canvas.width - 80, y: canvas.height - 60 },
         message: ''
     };
     initTerrain();
@@ -631,5 +675,12 @@ function resetGame() {
 }
 
 // Initialize and start
+resizeCanvas();
 initTerrain();
 gameLoop();
+
+// Handle window resize
+window.addEventListener('resize', () => {
+    resizeCanvas();
+    resetGame();
+});

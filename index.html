@@ -11,46 +11,62 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             background: #1a1a2e;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #fff;
         }
 
         h1 {
-            margin-bottom: 10px;
-            color: #00ff88;
-            text-shadow: 0 0 10px #00ff8855;
+            display: none;
         }
 
         #game-container {
             position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
         }
 
         canvas {
-            border: 3px solid #00ff88;
-            border-radius: 8px;
-            box-shadow: 0 0 20px #00ff8833;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 10;
         }
 
         #controls {
-            margin-top: 15px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
-            justify-content: center;
+            pointer-events: auto;
         }
 
         .tool-btn {
-            padding: 10px 20px;
-            font-size: 14px;
+            padding: 8px 16px;
+            font-size: 13px;
             cursor: pointer;
-            background: #16213e;
+            background: rgba(22, 33, 62, 0.9);
             color: #fff;
             border: 2px solid #0f3460;
             border-radius: 5px;
@@ -58,7 +74,7 @@
         }
 
         .tool-btn:hover {
-            background: #0f3460;
+            background: rgba(15, 52, 96, 0.9);
             border-color: #00ff88;
         }
 
@@ -69,16 +85,17 @@
         }
 
         #stats {
-            margin-top: 15px;
-            font-size: 16px;
             display: flex;
-            gap: 30px;
+            gap: 15px;
+            flex-wrap: wrap;
+            pointer-events: auto;
         }
 
         .stat {
-            padding: 8px 15px;
-            background: #16213e;
+            padding: 6px 12px;
+            background: rgba(22, 33, 62, 0.9);
             border-radius: 5px;
+            font-size: 14px;
         }
 
         .stat-value {
@@ -87,59 +104,42 @@
         }
 
         #message {
-            margin-top: 15px;
-            font-size: 18px;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
             color: #ffcc00;
-            min-height: 25px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 10;
         }
 
         #instructions {
-            margin-top: 20px;
-            padding: 15px;
-            background: #16213e;
-            border-radius: 8px;
-            max-width: 800px;
-            text-align: center;
-            line-height: 1.6;
-        }
-
-        #instructions h3 {
-            color: #00ff88;
-            margin-bottom: 10px;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <h1>Lemmings JS</h1>
-
     <div id="game-container">
-        <canvas id="game" width="800" height="500"></canvas>
-    </div>
-
-    <div id="controls">
-        <button class="tool-btn" data-tool="none">Select (S)</button>
-        <button class="tool-btn" data-tool="blocker">Blocker (B)</button>
-        <button class="tool-btn" data-tool="digger">Digger (D)</button>
-        <button class="tool-btn" data-tool="builder">Builder (U)</button>
-        <button class="tool-btn" data-tool="basher">Basher (A)</button>
-        <button class="tool-btn" data-tool="umbrella">Umbrella (M)</button>
-        <button class="tool-btn" id="restart-btn">Restart (R)</button>
-    </div>
-
-    <div id="stats">
-        <div class="stat">Released: <span class="stat-value" id="released">0</span></div>
-        <div class="stat">Saved: <span class="stat-value" id="saved">0</span></div>
-        <div class="stat">Lost: <span class="stat-value" id="lost">0</span></div>
-        <div class="stat">Tool Uses: <span class="stat-value" id="tool-uses">10</span></div>
-    </div>
-
-    <div id="message"></div>
-
-    <div id="instructions">
-        <h3>How to Play</h3>
-        <p>Guide the lemmings from the entrance (top-left) to the exit (bottom-right)!</p>
-        <p>Select a tool and click on a lemming to assign it. Each tool changes lemming behavior.</p>
-        <p><strong>Tools:</strong> Blocker (stops others) | Digger (digs down) | Builder (builds stairs) | Basher (digs sideways) | Umbrella (survives falls)</p>
+        <canvas id="game"></canvas>
+        <div id="ui-overlay">
+            <div id="controls">
+                <button class="tool-btn" data-tool="none">Select (S)</button>
+                <button class="tool-btn" data-tool="blocker">Blocker (B)</button>
+                <button class="tool-btn" data-tool="digger">Digger (D)</button>
+                <button class="tool-btn" data-tool="builder">Builder (U)</button>
+                <button class="tool-btn" data-tool="basher">Basher (A)</button>
+                <button class="tool-btn" data-tool="umbrella">Umbrella (M)</button>
+                <button class="tool-btn" id="restart-btn">Restart (R)</button>
+            </div>
+            <div id="stats">
+                <div class="stat">Released: <span class="stat-value" id="released">0</span></div>
+                <div class="stat">Saved: <span class="stat-value" id="saved">0</span></div>
+                <div class="stat">Lost: <span class="stat-value" id="lost">0</span></div>
+                <div class="stat">Tools: <span class="stat-value" id="tool-uses">10</span></div>
+            </div>
+        </div>
+        <div id="message"></div>
     </div>
 
     <script src="game.js"></script>
