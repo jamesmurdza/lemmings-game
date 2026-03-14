@@ -21,13 +21,13 @@ function resizeCanvas() {
 }
 
 // Game constants
-const GRAVITY = 0.4;
-const LEMMING_SPEED = 0.7;
-const LEMMING_SIZE = 14;
-const TILE_SIZE = 14;
+const GRAVITY = 0.5;
+const LEMMING_SPEED = 0.9;
+const LEMMING_SIZE = 20;
+const TILE_SIZE = 20;
 const SPAWN_INTERVAL = 120; // frames between spawns (slower spawning)
 const MAX_LEMMINGS = 15;
-const FALL_DEATH_HEIGHT = 160; // more forgiving fall distance
+const FALL_DEATH_HEIGHT = 220; // more forgiving fall distance
 
 // Colors
 const COLORS = {
@@ -191,22 +191,22 @@ function drawTerrain() {
 function drawEntranceExit() {
     // Entrance
     ctx.fillStyle = COLORS.entrance;
-    ctx.fillRect(gameState.entrance.x - 21, gameState.entrance.y - 28, 42, 28);
+    ctx.fillRect(gameState.entrance.x - 30, gameState.entrance.y - 40, 60, 40);
     ctx.fillStyle = '#6666ff';
-    ctx.fillRect(gameState.entrance.x - 7, gameState.entrance.y - 7, 14, 14);
+    ctx.fillRect(gameState.entrance.x - 10, gameState.entrance.y - 10, 20, 20);
 
     // Exit
     ctx.fillStyle = COLORS.exit;
     ctx.beginPath();
-    ctx.moveTo(gameState.exit.x, gameState.exit.y - 42);
-    ctx.lineTo(gameState.exit.x - 28, gameState.exit.y);
-    ctx.lineTo(gameState.exit.x + 28, gameState.exit.y);
+    ctx.moveTo(gameState.exit.x, gameState.exit.y - 60);
+    ctx.lineTo(gameState.exit.x - 40, gameState.exit.y);
+    ctx.lineTo(gameState.exit.x + 40, gameState.exit.y);
     ctx.closePath();
     ctx.fill();
 
     // Exit door
     ctx.fillStyle = '#00aa55';
-    ctx.fillRect(gameState.exit.x - 11, gameState.exit.y - 28, 22, 28);
+    ctx.fillRect(gameState.exit.x - 16, gameState.exit.y - 40, 32, 40);
 }
 
 // Lemming class
@@ -265,7 +265,7 @@ class Lemming {
         // Check for exit
         const dx = this.x - gameState.exit.x;
         const dy = this.y - gameState.exit.y;
-        if (Math.abs(dx) < 21 && Math.abs(dy) < 35) {
+        if (Math.abs(dx) < 25 && Math.abs(dy) < 45) {
             this.state = 'saved';
             gameState.saved++;
             return;
@@ -437,52 +437,52 @@ class Lemming {
         // Body
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(this.x, this.y - 7, LEMMING_SIZE / 2, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y - 10, LEMMING_SIZE / 2, 0, Math.PI * 2);
         ctx.fill();
 
         // Head
         ctx.fillStyle = '#ffd700';
         ctx.beginPath();
-        ctx.arc(this.x, this.y - 17, 6, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y - 24, 8, 0, Math.PI * 2);
         ctx.fill();
 
         // Direction indicator
         ctx.fillStyle = '#333';
         ctx.beginPath();
-        ctx.arc(this.x + this.direction * 3, this.y - 17, 2, 0, Math.PI * 2);
+        ctx.arc(this.x + this.direction * 4, this.y - 24, 3, 0, Math.PI * 2);
         ctx.fill();
 
         // Umbrella indicator
         if (this.hasUmbrella) {
             ctx.strokeStyle = COLORS.umbrella;
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 4;
             ctx.beginPath();
-            ctx.arc(this.x, this.y - 28, 11, Math.PI, 0);
+            ctx.arc(this.x, this.y - 38, 15, Math.PI, 0);
             ctx.stroke();
         }
 
         // State indicator for special states
         if (this.state === 'blocker') {
             ctx.strokeStyle = '#ff0000';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 4;
             ctx.beginPath();
-            ctx.moveTo(this.x - 7, this.y - 25);
-            ctx.lineTo(this.x + 7, this.y - 25);
+            ctx.moveTo(this.x - 10, this.y - 35);
+            ctx.lineTo(this.x + 10, this.y - 35);
             ctx.stroke();
         }
 
         // Dragging indicator - draw a glowing ring
         if (this.state === 'dragging') {
             ctx.strokeStyle = '#ff00ff';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(this.x, this.y - 5, LEMMING_SIZE / 2 + 4, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y - 7, LEMMING_SIZE / 2 + 5, 0, Math.PI * 2);
             ctx.stroke();
             // Draw grab hand indicator lines
             ctx.strokeStyle = 'rgba(255, 0, 255, 0.5)';
-            ctx.setLineDash([3, 3]);
+            ctx.setLineDash([4, 4]);
             ctx.beginPath();
-            ctx.arc(this.x, this.y - 5, LEMMING_SIZE / 2 + 8, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y - 7, LEMMING_SIZE / 2 + 10, 0, Math.PI * 2);
             ctx.stroke();
             ctx.setLineDash([]);
         }
@@ -490,8 +490,8 @@ class Lemming {
 
     containsPoint(px, py) {
         const dx = px - this.x;
-        const dy = py - (this.y - 7);
-        return dx * dx + dy * dy < 200;
+        const dy = py - (this.y - 10);
+        return dx * dx + dy * dy < 300;
     }
 }
 
