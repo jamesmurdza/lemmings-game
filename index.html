@@ -63,14 +63,18 @@
         }
 
         .tool-btn {
-            padding: 8px 16px;
-            font-size: 13px;
+            padding: 8px 12px;
+            font-size: 20px;
             cursor: pointer;
             background: rgba(22, 33, 62, 0.9);
             color: #fff;
             border: 2px solid #0f3460;
             border-radius: 5px;
             transition: all 0.2s;
+            min-width: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .tool-btn:hover {
@@ -124,13 +128,13 @@
         <canvas id="game"></canvas>
         <div id="ui-overlay">
             <div id="controls">
-                <button class="tool-btn" data-tool="none">Select (S)</button>
-                <button class="tool-btn" data-tool="blocker">Blocker (B)</button>
-                <button class="tool-btn" data-tool="digger">Digger (D)</button>
-                <button class="tool-btn" data-tool="builder">Builder (U)</button>
-                <button class="tool-btn" data-tool="basher">Basher (A)</button>
-                <button class="tool-btn" data-tool="umbrella">Umbrella (M)</button>
-                <button class="tool-btn" id="restart-btn">Restart (R)</button>
+                <button class="tool-btn" data-tool="none" title="Select (S)">👆</button>
+                <button class="tool-btn" data-tool="blocker" title="Blocker (B)">🛑</button>
+                <button class="tool-btn" data-tool="digger" title="Digger (D)">⛏️</button>
+                <button class="tool-btn" data-tool="builder" title="Builder (U)">🔨</button>
+                <button class="tool-btn" data-tool="basher" title="Basher (A)">💥</button>
+                <button class="tool-btn" data-tool="umbrella" title="Umbrella (M)">☂️</button>
+                <button class="tool-btn" id="restart-btn" title="Restart (R)">🔄</button>
             </div>
             <div id="stats">
                 <div class="stat">Released: <span class="stat-value" id="released">0</span></div>
